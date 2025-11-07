@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Importar routers
+from src.routers import matchmaking_router
+
 app = FastAPI(
     title="PADER Matchmaking AI",
     description="Microservicio de matchmaking con IA para PADER",
@@ -16,21 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {
-        "message": "PADER Matchmaking AI - Hackathon 2025",
-        "status": "ready",
-        "docs": "/docs"
-    }
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "service": "matchmaking-ai",
-        "version": "1.0.0"
-    }
+# Registrar routers
+app.include_router(matchmaking_router)
 
 if __name__ == "__main__":
     import uvicorn
