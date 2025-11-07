@@ -29,6 +29,23 @@ app.include_router(matchmaking_router)
 app.include_router(embeddings_router)
 app.include_router(vectors_router)
 
+@app.on_event("startup")
+async def startup_event():
+    """Inicializar servicios externos al arrancar"""
+    from src.infrastructure.external.openai_client import init_openai_client
+    from src.infrastructure.external.pinecone_client import init_pinecone_client
+    from src.infrastructure.schema.embedding import ClientConfig
+    from src.infrastructure.config import config as infra_config
+    
+    # Inicializar OpenAI
+    openai_config = ClientConfig(api_key=infra_config.OPENAI_API_KEY)
+    init_openai_client(openai_config)
+    
+    # Inicializar Pinecone
+    init_pinecone_client()
+    
+    print("✅ Servicios externos inicializados")
+
 @app.get("/")
 async def root():
     return {

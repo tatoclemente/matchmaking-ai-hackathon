@@ -31,10 +31,18 @@ class ScoringService:
             reasons.append("Nivel muy similar")
         
         # 3. Distancia geográfica (15%)
-        distance = haversine_distance(
-            player['location']['lat'], player['location']['lon'],
-            request['location']['lat'], request['location']['lon']
-        )
+        try:
+            player_loc = player.get('location', {})
+            request_loc = request.get('location', {})
+            distance = haversine_distance(
+                player_loc.get('lat', 0.0), player_loc.get('lon', 0.0),
+                request_loc.get('lat', 0.0), request_loc.get('lon', 0.0)
+            )
+        except Exception as e:
+            print(f"Error calculando distancia: {e}")
+            print(f"Player location: {player.get('location')}")
+            print(f"Request location: {request.get('location')}")
+            raise
         scores['distance'] = (1 / (1 + distance / 10)) * 0.15
         if distance < 3:
             reasons.append("Muy cerca del partido")

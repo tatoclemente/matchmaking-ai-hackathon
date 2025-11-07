@@ -41,7 +41,10 @@ class PineconeService:
         return {"status": "ok", "namespace": namespace}
 
 
-pinecone_service = PineconeService()
+_pinecone_service: Optional[PineconeService] = None
 
 def get_pinecone_service() -> PineconeService:
-    return pinecone_service
+    global _pinecone_service
+    if _pinecone_service is None:
+        _pinecone_service = PineconeService()
+    return _pinecone_service

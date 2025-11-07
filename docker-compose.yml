@@ -34,6 +34,7 @@ services:
       - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT}
     volumes:
       - ./src:/app/src  # Hot reload
+      - ./tests:/app/tests  # Tests
     restart: unless-stopped
 
 # volumes:

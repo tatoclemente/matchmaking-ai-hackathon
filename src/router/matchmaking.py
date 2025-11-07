@@ -56,11 +56,17 @@ class Player(BaseModel):
 class MatchRequest(BaseModel):
     match_id: str = Field(..., description="ID del match")
     required_players: int = Field(..., ge=1, le=4, description="Jugadores requeridos")
-    min_elo: Optional[int] = Field(default=None, ge=0, description="ELO mínimo")
-    max_elo: Optional[int] = Field(default=None, ge=0, description="ELO máximo")
+    min_elo: Optional[int] = Field(default=1000, ge=0, description="ELO mínimo")
+    max_elo: Optional[int] = Field(default=2000, ge=0, description="ELO máximo")
     zone: Optional[str] = Field(default=None, description="Zona / locación")
+    latitude: Optional[float] = Field(default=-31.4201, description="Latitud")
+    longitude: Optional[float] = Field(default=-64.1888, description="Longitud")
     preferred_skills: List[str] = Field(default_factory=list, description="Habilidades preferidas")
-    time_slot: Optional[str] = Field(default=None, description="Horario preferido ISO8601")
+    time_slot: Optional[str] = Field(default="18:00", description="Horario HH:MM")
+    duration: Optional[int] = Field(default=90, description="Duración en minutos")
+    categories: List[str] = Field(default_factory=list, description="Categorías aceptadas")
+    gender_preference: Optional[str] = Field(default="MIXED", description="Preferencia de género")
+    preferred_position: Optional[str] = Field(default=None, description="Posición preferida FOREHAND/BACKHAND")
 
     model_config = {
         "json_schema_extra": {
@@ -69,9 +75,15 @@ class MatchRequest(BaseModel):
                 "required_players": 2,
                 "min_elo": 1400,
                 "max_elo": 1800,
-                "zone": "nueva-cordoba",
+                "zone": "Nueva Córdoba",
+                "latitude": -31.4201,
+                "longitude": -64.1888,
                 "preferred_skills": ["smash", "defense"],
-                "time_slot": "2025-11-07T18:00:00Z"
+                "time_slot": "19:00",
+                "duration": 90,
+                "categories": ["SEVENTH", "SIXTH"],
+                "gender_preference": "MIXED",
+                "preferred_position": "FOREHAND"
             }
         }
     }
@@ -190,10 +202,8 @@ async def find_candidates(request: MatchRequest):
     Pipeline:
     1. Crear embedding del request
     2. Buscar similares en Pinecone (top 50)
-    3. Filtrar por ELO range, edad, etc.
-    4. Enriquecer con métricas de DB
-    5. Calcular scoring final
-    6. Ordenar y retornar top 20
+    3. Calcular scoring final
+    4. Ordenar y retornar top 20
     
     Args:
         request: MatchRequest con requisitos del partido
@@ -206,27 +216,62 @@ async def find_candidates(request: MatchRequest):
         HTTPException 500: Error en el proceso de matchmaking
     """
     try:
-        # TODO: Aquí llamar al MatchmakingService
-        # matchmaking_service = get_matchmaking_service()
-        # candidates = await matchmaking_service.find_candidates(request)
+        from src.services.matchmaking_service import MatchmakingService
+        from src.services.scoring_service import ScoringService
+        from src.infrastructure.services.openai_service import OpenAIService
+        from src.infrastructure.services.pinecone_service import PineconeService
+        from src.infrastructure.external.openai_client import openai_client, init_openai_client
+        from src.infrastructure.external.pinecone_client import pinecone_client, init_pinecone_client
+        from src.infrastructure.schema.embedding import ClientConfig
+        from src.infrastructure.config import config as infra_config
+        from src.services.request_adapter import adapt_router_request_to_scoring
         
-        # if not candidates:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND,
-        #         detail="No se encontraron candidatos para este partido"
-        #     )
+        # Asegurar que los clientes estén inicializados
+        if openai_client is None:
+            openai_config = ClientConfig(api_key=infra_config.OPENAI_API_KEY)
+            init_openai_client(openai_config)
         
-        # return MatchmakingResponse(
-        #     match_id=request.match_id,
-        #     candidates=candidates,
-        #     total_found=len(candidates),
-        #     ready_for_invitations=True
-        # )
+        if pinecone_client is None:
+            init_pinecone_client()
         
-        # Respuesta temporal para que el endpoint funcione
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="MatchmakingService aún no implementado"
+        # Inicializar servicios
+        openai_service = OpenAIService()
+        pinecone_service = PineconeService()
+        scoring_service = ScoringService()
+        matchmaking_service = MatchmakingService(openai_service, pinecone_service, scoring_service)
+        
+        # Adaptar request al formato de scoring
+        request_dict = request.model_dump()
+        adapted_request = adapt_router_request_to_scoring(request_dict)
+        
+        # Buscar candidatos
+        candidates_data = await matchmaking_service.find_candidates(adapted_request)
+        
+        if not candidates_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No se encontraron candidatos para este partido"
+            )
+        
+        # Convertir a formato de respuesta
+        candidates = [
+            Candidate(
+                player_id=c['player_id'],
+                score=c['score'],
+                metadata={
+                    'distance_km': c['distance_km'],
+                    'reasons': c['reasons'],
+                    **c.get('metadata', {})
+                }
+            )
+            for c in candidates_data
+        ]
+        
+        return MatchmakingResponse(
+            match_id=request.match_id,
+            candidates=candidates,
+            total_found=len(candidates),
+            ready_for_invitations=True
         )
         
     except HTTPException:

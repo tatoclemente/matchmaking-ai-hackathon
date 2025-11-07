@@ -4,12 +4,14 @@ Módulo de base de datos.
 Maneja conexiones a PostgreSQL y operaciones de base de datos.
 """
 
-from .connection import get_connection, close_connection
-from .init_db import initialize_database
+from .connection import SessionLocal, get_db, engine, Base
+from .init_db import init_database
 
 __all__ = [
-    "get_connection",
-    "close_connection",
-    "initialize_database",
+    "SessionLocal",
+    "get_db",
+    "engine",
+    "Base",
+    "init_database",
 ]
 

@@ -21,4 +21,9 @@ echo "----------------------------"
 python3 tests/test_scoring_service.py
 
 echo ""
+echo "🔗 Test Matchmaking Integration"
+echo "----------------------------"
+python3 tests/test_matchmaking_integration.py
+
+echo ""
 echo "✅ Todos los tests completados"

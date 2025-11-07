@@ -29,6 +29,7 @@ class OpenAIService:
 
     def __init__(self, client: Optional[OpenAIClient] = None, max_batch_size: Optional[int] = None):
         # Intentar usar el client inyectado, sino usar el global
+        global openai_client
         self.client: Optional[OpenAIClient] = client or openai_client
 
         # Si no está inicializado, intentar inicializar desde variables de entorno
@@ -41,14 +42,32 @@ class OpenAIService:
 
             try:
                 cfg = ClientConfig(api_key=api_key)
+                # Crear directamente sin usar singleton
+                from openai import OpenAI as OpenAISDK
+                
+                class SimpleOpenAIClient:
+                    def __init__(self, sdk_client, model):
+                        self._sdk = sdk_client
+                        self.model = model
+                    
+                    def create_embedding(self, text):
+                        return self._sdk.embeddings.create(
+                            model=self.model, input=text, encoding_format="float"
+                        ).data[0].embedding
+                    
+                    def create_embeddings_batch(self, texts):
+                        resp = self._sdk.embeddings.create(
+                            model=self.model, input=texts, encoding_format="float"
+                        )
+                        return [item.embedding for item in resp.data]
+                
+                sdk_client = OpenAISDK(api_key=cfg.api_key)
+                self.client = SimpleOpenAIClient(sdk_client, cfg.model)
             except Exception as e:
                 raise RuntimeError(
-                    "OpenAI client no inicializado y no se pudo crear ClientConfig: "
-                    f"{e}."
+                    f"Error inicializando OpenAI client: {e}"
                 )
-
-            init_openai_client(cfg)
-            self.client = openai_client
+            
         self.max_batch_size = max_batch_size or self.DEFAULT_MAX_BATCH_SIZE
         self._cache: Dict[str, List[float]] = {}
 
@@ -187,8 +206,11 @@ class OpenAIService:
 
 
 # Singleton instance for the service
-openai_service = OpenAIService()
+_openai_service: Optional[OpenAIService] = None
 
 def get_openai_service() -> OpenAIService:
     """Accessor para inyectar en routers sin crear múltiples instancias."""
-    return openai_service
+    global _openai_service
+    if _openai_service is None:
+        _openai_service = OpenAIService()
+    return _openai_service
