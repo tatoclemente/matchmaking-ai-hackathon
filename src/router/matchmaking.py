@@ -8,12 +8,140 @@ Define los endpoints para:
 - Seeding de datos
 """
 
-from typing import List
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-# TODO: Importar modelos cuando estén implementados
-# from src.models import Player, MatchRequest, Candidate
+###############################################################################
+# MODELOS Pydantic (faltantes)
+###############################################################################
+
+class HealthResponse(BaseModel):
+    status: str = Field(..., description="Estado del servicio")
+    service: str = Field(..., description="Nombre del servicio")
+    version: str = Field(..., description="Versión")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {"status": "healthy", "service": "matchmaking-ai", "version": "1.0.0"}
+        }
+    }
+
+
+class Player(BaseModel):
+    id: str = Field(..., description="ID del jugador")
+    name: str = Field(..., description="Nombre")
+    elo: int = Field(..., ge=0, description="ELO del jugador")
+    age: Optional[int] = Field(default=None, ge=10, le=90, description="Edad")
+    handedness: Optional[str] = Field(default=None, description="Mano dominante")
+    description: Optional[str] = Field(default=None, description="Descripción libre")
+    skills: List[str] = Field(default_factory=list, description="Habilidades")
+    interests: List[str] = Field(default_factory=list, description="Intereses")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "player_123",
+                "name": "Carlos",
+                "elo": 1520,
+                "age": 28,
+                "handedness": "left",
+                "skills": ["smash", "bandeja"],
+                "interests": ["torneos", "competitivo"]
+            }
+        }
+    }
+
+
+class MatchRequest(BaseModel):
+    match_id: str = Field(..., description="ID del match")
+    required_players: int = Field(..., ge=1, le=4, description="Jugadores requeridos")
+    min_elo: Optional[int] = Field(default=None, ge=0, description="ELO mínimo")
+    max_elo: Optional[int] = Field(default=None, ge=0, description="ELO máximo")
+    zone: Optional[str] = Field(default=None, description="Zona / locación")
+    preferred_skills: List[str] = Field(default_factory=list, description="Habilidades preferidas")
+    time_slot: Optional[str] = Field(default=None, description="Horario preferido ISO8601")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "match_id": "match_789",
+                "required_players": 2,
+                "min_elo": 1400,
+                "max_elo": 1800,
+                "zone": "nueva-cordoba",
+                "preferred_skills": ["smash", "defense"],
+                "time_slot": "2025-11-07T18:00:00Z"
+            }
+        }
+    }
+
+
+class Candidate(BaseModel):
+    player_id: str = Field(..., description="ID del jugador")
+    score: float = Field(..., ge=0, le=1, description="Score normalizado [0,1]")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata adicional")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "player_id": "player_123",
+                "score": 0.87,
+                "metadata": {"elo": 1520, "skills": ["smash"]}
+            }
+        }
+    }
+
+
+class MatchmakingResponse(BaseModel):
+    match_id: str
+    candidates: List[Candidate]
+    total_found: int
+    ready_for_invitations: bool
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "match_id": "match_789",
+                "candidates": [
+                    {"player_id": "player_123", "score": 0.91, "metadata": {"elo": 1520}}
+                ],
+                "total_found": 1,
+                "ready_for_invitations": True
+            }
+        }
+    }
+
+
+class IndexPlayerResponse(BaseModel):
+    message: str = Field(..., description="Mensaje de confirmación")
+    player_id: str = Field(..., description="ID del jugador indexado")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {"message": "Player indexed successfully", "player_id": "player_123"}
+        }
+    }
+
+
+class StatsResponse(BaseModel):
+    total_players: int = Field(..., description="Total jugadores registrados")
+    avg_elo: float = Field(..., description="Promedio ELO")
+    indexed_vectors: int = Field(..., description="Vectores en índice Pinecone")
+    pinecone_index: Optional[str] = Field(default=None, description="Nombre del índice")
+    timestamp: str = Field(..., description="Timestamp de generación ISO8601")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "total_players": 1200,
+                "avg_elo": 1450.5,
+                "indexed_vectors": 1180,
+                "pinecone_index": "matchmaking-players",
+                "timestamp": "2025-11-07T10:30:00Z"
+            }
+        }
+    }
 
 router = APIRouter(
     prefix="/api/matchmaking",
