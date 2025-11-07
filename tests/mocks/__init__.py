@@ -1,2 +1,0 @@
-# Mocks para testing
-
