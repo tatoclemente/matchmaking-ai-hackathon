@@ -51,3 +51,12 @@ def get_time_overlap_score(
                 best_overlap = max(best_overlap, min(ratio, 1.0))
 
     return round(best_overlap, 3)
+
+
+def check_time_availability(player_availability: List[Dict], match_time: str, required_minutes: int) -> float:
+    """Verificar disponibilidad horaria del jugador para el partido"""
+    if not player_availability:
+        return 0.5
+    
+    match_slot = {"min": match_time, "max": parse_time(match_time).strftime("%H:%M")}
+    return get_time_overlap_score([match_slot], player_availability, required_minutes)

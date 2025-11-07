@@ -26,14 +26,40 @@ docker-compose up --build
 - Docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health
 
-## 🧪 Tests Rápidos
+## 🧪 Tests
 
-### Test PostgreSQL
+### Ejecutar todos los tests
+```bash
+./run_tests.sh
+```
+
+Esto ejecuta:
+- ✓ Test de cálculo de distancias (Haversine)
+- ✓ Test de scoring service completo
+- ✓ Test de mensajes personalizados
+
+### Tests individuales
+
+**Test Scoring Service:**
+```bash
+export PYTHONPATH=.
+python3 tests/test_scoring_service.py
+```
+
+**Test Haversine Distance:**
+```bash
+export PYTHONPATH=.
+python3 -c "from tests.utils.test_geo_utils import test_haversine_distance; test_haversine_distance(); print('✓ Test passed')"
+```
+
+### Tests de integración
+
+**Test PostgreSQL:**
 ```bash
 docker exec -it matchmaking_db psql -U pader -d matchmaking -c "SELECT * FROM players;"
 ```
 
-### Test API
+**Test API:**
 ```bash
 curl http://localhost:8000/health
 ```
