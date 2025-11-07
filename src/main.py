@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.middleware import register_exception_handlers
-from src.routers import example
+from src.router import matchmaking_router
+from src.router.embeddings import router as embeddings_router
+from src.router.vectors import router as vectors_router
 
 app = FastAPI(
     title="PADER Matchmaking AI",
@@ -23,7 +25,9 @@ app.add_middleware(
 register_exception_handlers(app)
 
 # Registrar routers
-app.include_router(example.router)
+app.include_router(matchmaking_router)
+app.include_router(embeddings_router)
+app.include_router(vectors_router)
 
 @app.get("/")
 async def root():

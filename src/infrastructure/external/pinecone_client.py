@@ -74,23 +74,54 @@ class PineconeClient:
         self.index = pc.Index(self.index_name)
         return self.index
 
-    def upsert_vectors(self, vectors: List[Dict[str, Any]]):
+    def upsert_vectors(self, vectors: List[Dict[str, Any]], namespace: Optional[str] = None):
+        """Inserta o actualiza vectores en el índice.
+
+        Args:
+            vectors: Lista de diccionarios con formato {"id": str, "values": List[float], "metadata": {...}}
+            namespace: Namespace opcional para segmentar datos.
+        """
         if not self.index:
             self.initialize_index()
         assert self.index is not None
-        self.index.upsert(vectors=vectors)  # type: ignore[arg-type]
+        if namespace:
+            self.index.upsert(vectors=vectors, namespace=namespace)  # type: ignore[arg-type]
+        else:
+            self.index.upsert(vectors=vectors)  # type: ignore[arg-type]
 
     def search_similar(
         self,
         query_embedding: List[float],
         filters: Optional[Dict[str, Any]] = None,
         top_k: int = 50,
+        namespace: Optional[str] = None,
     ):
+        """Busca vectores similares.
+
+        Args:
+            query_embedding: Embedding de consulta.
+            filters: Filtros metadata (dict Pinecone).
+            top_k: Número máximo de coincidencias.
+            namespace: Namespace opcional.
+        """
         if not self.index:
             self.initialize_index()
         assert self.index is not None
-        res = self.index.query(vector=query_embedding, filter=filters, top_k=top_k, include_metadata=True)
+        kwargs: Dict[str, Any] = {"vector": query_embedding, "filter": filters, "top_k": top_k, "include_metadata": True}
+        if namespace:
+            kwargs["namespace"] = namespace
+        res = self.index.query(**kwargs)
         return res.matches  # type: ignore[attr-defined]
+
+    def delete_all_vectors(self, namespace: Optional[str] = None):
+        """Elimina todos los vectores del índice (opcionalmente dentro de un namespace)."""
+        if not self.index:
+            self.initialize_index()
+        assert self.index is not None
+        if namespace:
+            self.index.delete(delete_all=True, namespace=namespace)
+        else:
+            self.index.delete(delete_all=True)
 
 
 pinecone_client: Optional[PineconeClient] = None
