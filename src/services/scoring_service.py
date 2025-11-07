@@ -65,7 +65,8 @@ class ScoringService:
         if request.get('preferred_position'):
             if request['preferred_position'] in player.get('positions', []):
                 scores['position_bonus'] = 0.05
-                reasons.append(f"Juega de {request['preferred_position'].lower()}")
+                position_text = "drive" if request['preferred_position'] == "FOREHAND" else "revés"
+                reasons.append(f"Juega de {position_text}")
             else:
                 scores['position_bonus'] = -0.05
         
