@@ -6,15 +6,21 @@ Captura y maneja todas las excepciones de forma centralizada.
 
 import logging
 import traceback
-from typing import Union
+from typing import Union, Optional
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from src.exceptions import AppException
-from src.messages import ErrorMessages, format_message
+try:
+    # Nueva ubicación (infraestructura) esperada
+    from src.infrastructure.exception.exceptions import AppException  # type: ignore
+    from src.infrastructure.exception.messages import ErrorMessages, format_message  # type: ignore
+except ModuleNotFoundError:
+    # Fallback si la estructura cambia o en tests legacy
+    from src.infrastructure.exception.exceptions import AppException  # type: ignore
+    from src.infrastructure.exception.messages import ErrorMessages, format_message  # type: ignore
 
 
 # Configurar logger
@@ -29,8 +35,8 @@ def create_error_response(
     error_code: str,
     message: str,
     status_code: int,
-    details: dict = None,
-    path: str = None
+    details: Optional[dict] = None,
+    path: Optional[str] = None
 ) -> dict:
     """
     Crear estructura estandarizada de respuesta de error.
@@ -199,11 +205,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         app: Instancia de FastAPI
     """
     # Handler para excepciones personalizadas
-    app.add_exception_handler(AppException, app_exception_handler)
+    app.add_exception_handler(AppException, app_exception_handler)  # type: ignore[arg-type]
     
     # Handler para errores de validación de Pydantic
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(ValidationError, validation_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(ValidationError, validation_exception_handler)  # type: ignore[arg-type]
     
     # Handler catch-all para excepciones no manejadas
     app.add_exception_handler(Exception, general_exception_handler)
