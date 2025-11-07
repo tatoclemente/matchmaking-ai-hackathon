@@ -2,7 +2,7 @@ from openai import OpenAI
 from typing import List, Optional, Union
 import logging
 
-from src.schemas.embedding import (
+from src.infrastructure.schema.embedding import (
     EmbeddingRequest,
     BatchEmbeddingRequest,
     ClientConfig,

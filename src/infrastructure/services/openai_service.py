@@ -4,7 +4,7 @@ import logging
 
 from src.infrastructure.external.openai_client import openai_client, init_openai_client, OpenAIClient
 from src.infrastructure.config import config as infra_config
-from src.infrastructure.schemas.embedding import (
+from src.infrastructure.schema.embedding import (
     EmbeddingRequest,
     EmbeddingResponse,
     BatchEmbeddingRequest,

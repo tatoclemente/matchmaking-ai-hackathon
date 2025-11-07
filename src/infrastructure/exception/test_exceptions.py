@@ -4,7 +4,7 @@ Script de prueba para el sistema de excepciones.
 Ejecutar: python -m src.test_exceptions
 """
 
-from src.exceptions import (
+from src.infrastructure.exception.exceptions import (
     PlayerNotFoundError,
     ValidationError,
     OpenAIRateLimitError,
@@ -12,7 +12,7 @@ from src.exceptions import (
     InvalidEloRangeError,
     DatabaseConnectionError
 )
-from src.messages import ErrorMessages, SuccessMessages, format_message
+from src.infrastructure.exception.messages import ErrorMessages, SuccessMessages, format_message
 
 
 def test_exceptions():

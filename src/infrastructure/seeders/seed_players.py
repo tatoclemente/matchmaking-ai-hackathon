@@ -6,9 +6,10 @@ import psycopg2
 import psycopg2.extras
 from faker import Faker
 from typing import List, Dict, Any
-from src.config import config
-from src.external.openai_client import openai_client
-from src.external.pinecone_client import pinecone_client
+from src.infrastructure.config import config
+from src.infrastructure.external.openai_client import openai_client, init_openai_client
+from src.infrastructure.schema.embedding import ClientConfig
+from src.infrastructure.external.pinecone_client import init_pinecone_client, pinecone_client
 
 fake = Faker('es_AR')
 
@@ -98,19 +99,24 @@ def clean_data():
     """Limpiar datos existentes de PostgreSQL y Pinecone"""
     print("Limpiando datos existentes...")
     
-    # Limpiar PostgreSQL
+    # Limpiar PostgreSQL (TRUNCATE más rápido)
     conn = psycopg2.connect(config.DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM players")
+    cursor.execute("TRUNCATE players")
     conn.commit()
     cursor.close()
     conn.close()
-    print("✓ PostgreSQL limpiado")
+    print("✓ PostgreSQL truncado")
     
     # Limpiar Pinecone
+    init_pinecone_client()
+    assert pinecone_client is not None
     pinecone_client.initialize_index()
-    pinecone_client.index.delete(delete_all=True)
-    print("✓ Pinecone limpiado")
+    if getattr(pinecone_client, "index", None) is not None:
+        pinecone_client.index.delete(delete_all=True)  # type: ignore[attr-defined]
+        print("✓ Pinecone limpiado")
+    else:
+        print("(Advertencia) Índice Pinecone no disponible para limpieza")
 
 def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = True):
     if clean:
@@ -121,7 +127,16 @@ def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = T
     conn = psycopg2.connect(config.DATABASE_URL)
     cursor = conn.cursor()
     
+    init_pinecone_client()
+    assert pinecone_client is not None
     pinecone_client.initialize_index()
+
+    # Asegurar que el cliente de OpenAI esté inicializado
+    if openai_client is None:
+        api_key = config.OPENAI_API_KEY
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY no está configurado en el entorno")
+        init_openai_client(ClientConfig(api_key=api_key))
     
     for batch_start in range(0, num_players, batch_size):
         batch_end = min(batch_start + batch_size, num_players)
@@ -152,7 +167,7 @@ def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = T
         
         # Generar embeddings en batch
         descriptions = [build_player_description(p) for p in batch_players]
-        embeddings = openai_client.create_embeddings_batch(descriptions)
+        embeddings = openai_client.create_embeddings_batch(descriptions)  # type: ignore[union-attr]
         
         # Preparar vectores para Pinecone
         vectors = []
@@ -170,9 +185,10 @@ def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = T
                     'positions': player['positions']
                 }
             })
-        
+
+        assert pinecone_client is not None
         pinecone_client.upsert_vectors(vectors)
-        
+
         print(f"✓ Batch {batch_start}-{batch_end} completado")
     
     cursor.close()
@@ -184,6 +200,6 @@ if __name__ == "__main__":
     import sys
     config.validate()
     
-    # Opciones: python -m src.seeders.seed_players [--no-clean]
+    # Opciones: python -m src.infrastructure.seeders.seed_players [--no-clean]
     clean = "--no-clean" not in sys.argv
     seed_players(1000, clean=clean)
