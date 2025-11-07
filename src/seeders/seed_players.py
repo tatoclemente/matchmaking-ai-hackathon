@@ -56,7 +56,7 @@ def generate_player() -> Dict[str, Any]:
         'id': str(uuid.uuid4()),
         'name': fake.name(),
         'elo': elo,
-        'age': random.randint(18, 60),
+        'age': random.randint(18, 49),
         'gender': random.choice(GENDERS),
         'category': category["name"],
         'positions': random.sample(POSITIONS, k=random.randint(1, 2)),
