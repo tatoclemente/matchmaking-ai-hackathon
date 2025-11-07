@@ -5,6 +5,7 @@ Microservicio de matchmaking con IA para encontrar jugadores compatibles en PADE
 ## 🏃 Quick Start
 
 ### 1. Clonar y configurar
+
 ```bash
 git clone <repo-url>
 cd matchmaking-ai
@@ -17,11 +18,13 @@ nano .env
 ```
 
 ### 2. Levantar servicios
+
 ```bash
 docker-compose up --build
 ```
 
 ### 3. Verificar
+
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health
@@ -29,11 +32,13 @@ docker-compose up --build
 ## 🧪 Tests Rápidos
 
 ### Test PostgreSQL
+
 ```bash
 docker exec -it matchmaking_db psql -U pader -d matchmaking -c "SELECT * FROM players;"
 ```
 
 ### Test API
+
 ```bash
 curl http://localhost:8000/health
 ```
@@ -58,3 +63,5 @@ docker-compose up --build
 # Acceder a la DB
 docker exec -it matchmaking_db psql -U pader -d matchmaking
 ```
+
+## Prueba
