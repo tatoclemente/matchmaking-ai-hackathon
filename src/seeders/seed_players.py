@@ -12,6 +12,10 @@ from src.external.pinecone_client import pinecone_client
 
 fake = Faker('es_AR')
 
+MALE_NAMES = ["Juan", "Carlos", "Diego", "Martín", "Lucas", "Matías", "Santiago", "Nicolás", "Facundo", "Gonzalo", "Federico", "Sebastián", "Maximiliano", "Agustín", "Pablo", "Javier", "Rodrigo", "Alejandro", "Fernando", "Andrés", "Emiliano", "Tomás", "Ignacio", "Franco", "Ezequiel", "Leandro", "Mariano", "Damián", "Cristian", "Gustavo", "Hernán", "Marcelo", "Claudio", "Ricardo", "Jorge", "Raúl", "Sergio", "Daniel", "Miguel", "Oscar", "Ramiro", "Mateo", "Thiago", "Bautista", "Valentín", "Joaquín", "Lautaro", "Benjamín", "Santino", "Luciano"]
+FEMALE_NAMES = ["María", "Ana", "Laura", "Sofía", "Valentina", "Camila", "Florencia", "Lucía", "Martina", "Victoria", "Catalina", "Julieta", "Micaela", "Agustina", "Carolina", "Gabriela", "Natalia", "Paula", "Romina", "Daniela", "Antonella", "Milagros", "Rocío", "Belén", "Celeste", "Soledad", "Vanesa", "Andrea", "Claudia", "Silvia", "Mónica", "Patricia", "Susana", "Marta", "Elena", "Isabel", "Emilia", "Delfina", "Jazmín", "Candela", "Abril", "Lola", "Emma", "Alma", "Nina", "Bianca", "Renata", "Mora", "Mía", "Olivia"]
+LAST_NAMES = ["González", "Rodríguez", "Fernández", "López", "Martínez", "García", "Pérez", "Sánchez", "Romero", "Díaz", "Torres", "Álvarez", "Ruiz", "Gómez", "Moreno", "Jiménez", "Castro", "Ortiz", "Silva", "Rojas", "Vargas", "Herrera", "Medina", "Molina", "Ramírez", "Suárez", "Vega", "Mendoza", "Navarro", "Ramos", "Flores", "Acosta", "Benítez", "Cabrera", "Domínguez", "Figueroa", "Gutiérrez", "Luna", "Peralta", "Ríos", "Sosa", "Vera", "Blanco", "Campos", "Correa", "Delgado", "Escobar", "Fuentes", "Ibáñez", "Juárez"]
+
 CATEGORIES = [
     {"name": "NINTH", "min_elo": 0, "max_elo": 1199, "weight": 0.05},
     {"name": "EIGHTH", "min_elo": 1200, "max_elo": 1499, "weight": 0.08},
@@ -52,12 +56,19 @@ def generate_player() -> Dict[str, Any]:
     elo = int(np.random.normal(elo_center, elo_range / 4))
     elo = max(category["min_elo"], min(category["max_elo"], elo))
     
+    # Seleccionar género y generar nombre acorde
+    gender = random.choice(GENDERS)
+    if gender == "MALE":
+        name = f"{random.choice(MALE_NAMES)} {random.choice(LAST_NAMES)}"
+    else:
+        name = f"{random.choice(FEMALE_NAMES)} {random.choice(LAST_NAMES)}"
+    
     return {
         'id': str(uuid.uuid4()),
-        'name': fake.name(),
+        'name': name,
         'elo': elo,
         'age': random.randint(18, 49),
-        'gender': random.choice(GENDERS),
+        'gender': gender,
         'category': category["name"],
         'positions': random.sample(POSITIONS, k=random.randint(1, 2)),
         'location': {
@@ -108,13 +119,20 @@ def clean_data():
     print("✓ PostgreSQL limpiado")
     
     # Limpiar Pinecone
-    pinecone_client.initialize_index()
-    pinecone_client.index.delete(delete_all=True)
-    print("✓ Pinecone limpiado")
+    try:
+        pinecone_client.initialize_index()
+        pinecone_client.index.delete(delete_all=True)
+        print("✓ Pinecone limpiado")
+    except Exception as e:
+        print(f"⚠ Pinecone vacío o namespace no existe (esto es normal en primera ejecución)")
 
 def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = True):
     if clean:
-        clean_data()
+        try:
+            clean_data()
+        except Exception as e:
+            print(f"⚠ Error limpiando datos: {e}")
+            print("Continuando con el seeding...")
     
     print(f"Generando {num_players} jugadores...")
     
