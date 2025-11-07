@@ -5,6 +5,7 @@ load_dotenv()
 
 class Config:
     # OpenAI
+    # OpenAI
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     
     # Pinecone
