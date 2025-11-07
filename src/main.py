@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.middleware import register_exception_handlers
+from src.routers import example
+
 app = FastAPI(
     title="PADER Matchmaking AI",
     description="Microservicio de matchmaking con IA para PADER",
@@ -15,6 +18,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Registrar exception handlers globales
+register_exception_handlers(app)
+
+# Registrar routers
+app.include_router(example.router)
 
 @app.get("/")
 async def root():
