@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏗️ Guía de Infraestructura - Matchmaking AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            padding: 20px;
+            line-height: 1.7;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #a8d5e2 0%, #b8e6d5 100%);
+            color: #1a365d;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            border-radius: 20px;
+            padding: 35px;
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-3px);
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            font-size: 1.6em;
+            margin: 30px 0 18px 0;
+            font-weight: 600;
+            padding-left: 20px;
+            border-left: 5px solid currentColor;
+        }
+
+        /* Colores pasteles suaves */
+        .bg-mint { background: linear-gradient(135deg, #d4f4dd 0%, #e8f9ec 100%); }
+        .bg-lavender { background: linear-gradient(135deg, #e5dff7 0%, #f2eefa 100%); }
+        .bg-peach { background: linear-gradient(135deg, #ffe5d9 0%, #fff0e8 100%); }
+        .bg-sky { background: linear-gradient(135deg, #d9f0ff 0%, #e8f6ff 100%); }
+        .bg-lemon { background: linear-gradient(135deg, #fff9d6 0%, #fffde8 100%); }
+        .bg-rose { background: linear-gradient(135deg, #ffd6e7 0%, #ffe8f0 100%); }
+        .bg-aqua { background: linear-gradient(135deg, #d6f5f5 0%, #e8fafa 100%); }
+
+        .flow-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+            padding: 22px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '↓';
+            position: absolute;
+            bottom: -32px;
+            left: 25px;
+            font-size: 28px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .flow-step:last-child::after {
+            content: '';
+        }
+
+        .flow-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-block .keyword { color: #c792ea; }
+        .code-block .string { color: #c3e88d; }
+        .code-block .comment { color: #697098; }
+        .code-block .function { color: #82aaff; }
+        .code-block .number { color: #f78c6c; }
+
+        .info-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            border-left: 5px solid #0284c7;
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+            border-left: 5px solid #f59e0b;
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+            border-left: 5px solid #10b981;
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        .api-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .api-card h4 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+
+        .method-post { background: #10b981; color: white; }
+        .method-get { background: #3b82f6; color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: #ef4444; color: white; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 2px solid #f3f4f6;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1.3em;
+        }
+
+        .arch-diagram {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            border-radius: 16px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .arch-box {
+            display: inline-block;
+            background: white;
+            padding: 25px 35px;
+            margin: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            min-width: 180px;
+            border: 2px solid #e5e7eb;
+            font-weight: 600;
+        }
+
+        .arch-arrow {
+            font-size: 2.5em;
+            color: #667eea;
+            margin: 0 15px;
+            display: inline-block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px 18px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-top: 12px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 2em;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+
+        .toc {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            border: 2px solid #bae6fd;
+        }
+
+        .toc h2 {
+            margin-bottom: 20px;
+            color: #0c4a6e;
+            font-size: 1.8em;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .toc li {
+            margin: 12px 0;
+        }
+
+        .toc a {
+            color: #0369a1;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 1.05em;
+        }
+
+        .toc a:hover {
+            color: #667eea;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Guía de Infraestructura</h1>
+            <p>Matchmaking AI - Arquitectura Externa y Flujos de Integración</p>
+        </div>
+
+        <div class="content">
+            <!-- Índice -->
+            <div class="toc">
+                <h2>📑 Contenidos</h2>
+                <ul>
+                    <li>🏛️ <a href="#arquitectura">Arquitectura de Capas</a></li>
+                    <li>🔗 <a href="#external">Servicios Externos (Tu Responsabilidad)</a></li>
+                    <li>🤖 <a href="#openai">OpenAI - Embeddings</a></li>
+                    <li>🌲 <a href="#pinecone">Pinecone - Vector Database</a></li>
+                    <li>💾 <a href="#postgresql">PostgreSQL - Métricas</a></li>
+                    <li>🔄 <a href="#flujo-completo">Flujo Completo de Datos</a></li>
+                    <li>⚙️ <a href="#config">Configuración y Variables</a></li>
+                    <li>📡 <a href="#apis">Especificación de APIs</a></li>
+                </ul>
+            </div>
+
+            <!-- Arquitectura -->
+            <div id="arquitectura" class="section bg-mint">
+                <h2 class="section-title">🏛️ Arquitectura de Capas</h2>
+                
+                <div class="arch-diagram">
+                    <div style="margin-bottom: 40px;">
+                        <div class="arch-box" style="background: #ffe5d9;"><strong>PADER Server</strong><br>(Node.js / Externo)</div>
+                    </div>
+                    <div class="arch-arrow">↓ HTTP Request</div>
+                    <div style="margin: 40px 0;">
+                        <div class="arch-box" style="background: #d9f0ff;"><strong>FastAPI Router</strong><br>Presentation Layer</div>
+                    </div>
+                    <div class="arch-arrow">↓</div>
+                    <div style="margin: 40px 0;">
+                        <div class="arch-box" style="background: #d4f4dd;"><strong>Matchmaking Service</strong><br>Business Logic</div>
+                    </div>
+                    <div class="arch-arrow">↓</div>
+                    <div style="margin: 40px 0;">
+                        <div class="arch-box" style="background: #fff9d6;"><strong>External Adapters</strong><br>Tu Capa 🎯</div>
+                    </div>
+                    <div class="arch-arrow">↓</div>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <div class="arch-box" style="background: #e5dff7;">OpenAI</div>
+                        <div class="arch-box" style="background: #d6f5f5;">Pinecone</div>
+                        <div class="arch-box" style="background: #ffd6e7;">PostgreSQL</div>
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">Responsabilidades por Capa</h3>
+                <table>
+                    <tr>
+                        <th>Capa</th>
+                        <th>Responsabilidad</th>
+                        <th>Archivos</th>
+                        <th>Owner</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Presentation</strong></td>
+                        <td>Recibir HTTP, validar, responder</td>
+                        <td>src/routers/matchmaking.py</td>
+                        <td>Team 4</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Business</strong></td>
+                        <td>Lógica de matchmaking y scoring</td>
+                        <td>src/services/*.py</td>
+                        <td>Team 3</td>
+                    </tr>
+                    <tr>
+                        <td style="background: #fff9d6;"><strong>External 🎯</strong></td>
+                        <td style="background: #fff9d6;"><strong>APIs externas (Tu Focus)</strong></td>
+                        <td style="background: #fff9d6;"><strong>src/external/*.py</strong></td>
+                        <td style="background: #fff9d6;"><strong>TÚ</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Domain</strong></td>
+                        <td>Modelos Pydantic</td>
+                        <td>src/models/*.py</td>
+                        <td>Team 1</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- External Services -->
+            <div id="external" class="section bg-lavender">
+                <h2 class="section-title">🔗 Servicios Externos - Tu Responsabilidad</h2>
+                
+                <div class="success-box">
+                    <strong>🎯 Tu Enfoque Principal:</strong> Desarrollar la capa de External Adapters que conecta con OpenAI, Pinecone y PostgreSQL. Esta capa es crítica para el funcionamiento del matchmaking.
+                </div>
+
+                <h3 class="section-subtitle">Componentes a Desarrollar</h3>
+                <div class="grid-3">
+                    <div class="card">
+                        <h3>🤖 EmbeddingService</h3>
+                        <p><strong>Archivo:</strong> src/external/openai_client.py</p>
+                        <p><strong>Propósito:</strong> Generar embeddings de 1536 dims usando OpenAI API</p>
+                        <p><strong>Métodos principales:</strong></p>
+                        <ul>
+                            <li>create_player_embedding()</li>
+                            <li>create_request_embedding()</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>🌲 VectorStore</h3>
+                        <p><strong>Archivo:</strong> src/external/pinecone_client.py</p>
+                        <p><strong>Propósito:</strong> Búsqueda vectorial y almacenamiento en Pinecone</p>
+                        <p><strong>Métodos principales:</strong></p>
+                        <ul>
+                            <li>upsert_player()</li>
+                            <li>search_similar()</li>
+                            <li>delete_player()</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>💾 DatabaseClient</h3>
+                        <p><strong>Archivo:</strong> src/database/db_client.py</p>
+                        <p><strong>Propósito:</strong> Consultar métricas de jugadores en PostgreSQL</p>
+                        <p><strong>Métodos principales:</strong></p>
+                        <ul>
+                            <li>get_player_metrics()</li>
+                            <li>get_all_players()</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OpenAI -->
+            <div id="openai" class="section bg-peach">
+                <h2 class="section-title">🤖 OpenAI - Embeddings Service</h2>
+                
+                <div class="info-box">
+                    <strong>📚 Modelo a usar:</strong> text-embedding-3-small (1536 dimensiones)<br>
+                    <strong>⚡ Latencia esperada:</strong> 50-100ms por embedding<br>
+                    <strong>💰 Costo:</strong> $0.00002 por 1K tokens (~0.20 USD por 10K jugadores)
+                </div>
+
+                <h3 class="section-subtitle">Implementación del EmbeddingService</h3>
+                <div class="code-block">
+<span class="comment"># src/external/openai_client.py</span>
+<span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI
+<span class="keyword">from</span> typing <span class="keyword">import</span> List
+<span class="keyword">from</span> models.player <span class="keyword">import</span> Player
+<span class="keyword">from</span> models.match_request <span class="keyword">import</span> MatchRequest
+
+<span class="keyword">class</span> <span class="function">EmbeddingService</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, api_key: <span class="keyword">str</span>):
+        self.client = OpenAI(api_key=api_key)
+        self.model = <span class="string">"text-embedding-3-small"</span>
+    
+    <span class="keyword">def</span> <span class="function">create_player_embedding</span>(self, player: Player) -> List[<span class="keyword">float</span>]:
+        <span class="string">"""Generar embedding del perfil de jugador"""</span>
+        text = self._build_player_description(player)
+        
+        <span class="keyword">try</span>:
+            response = self.client.embeddings.create(
+                model=self.model,
+                input=text,
+                encoding_format=<span class="string">"float"</span>
+            )
+            <span class="keyword">return</span> response.data[<span class="number">0</span>].embedding
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            <span class="keyword">raise</span> EmbeddingError(<span class="string">f"Error generando embedding: {str(e)}"</span>)
+    
+    <span class="keyword">def</span> <span class="function">_build_player_description</span>(self, player: Player) -> <span class="keyword">str</span>:
+        <span class="string">"""Construir descripción rica del jugador"""</span>
+        parts = [
+            <span class="string">f"Jugador de pádel categoría {player.category}"</span>,
+            <span class="string">f"ELO {player.elo}"</span>,
+            <span class="string">f"Edad {player.age} años"</span>,
+            <span class="string">f"Género {player.gender}"</span>,
+            <span class="string">f"Juega de {' y '.join(player.positions)}"</span>,
+            <span class="string">f"Zona {player.location['zone']}"</span>
+        ]
+        
+        <span class="keyword">if</span> player.availability:
+            times = [<span class="string">f"{slot['min']}-{slot['max']}"</span> <span class="keyword">for</span> slot <span class="keyword">in</span> player.availability]
+            parts.append(<span class="string">f"Disponible {', '.join(times)}"</span>)
+        
+        <span class="comment"># Agregar contexto comportamental</span>
+        <span class="keyword">if</span> player.acceptance_rate > <span class="number">0.8</span>:
+            parts.append(<span class="string">"Jugador muy confiable y activo"</span>)
+        
+        <span class="keyword">return</span> <span class="string">". "</span>.join(parts)
+                </div>
+
+                <h3 class="section-subtitle">Construcción de Texto para Request</h3>
+                <div class="code-block">
+    <span class="keyword">def</span> <span class="function">create_request_embedding</span>(self, request: MatchRequest) -> List[<span class="keyword">float</span>]:
+        <span class="string">"""Generar embedding de requisitos del partido"""</span>
+        text = self._build_request_description(request)
+        
+        response = self.client.embeddings.create(
+            model=self.model,
+            input=text
+        )
+        <span class="keyword">return</span> response.data[<span class="number">0</span>].embedding
+    
+    <span class="keyword">def</span> <span class="function">_build_request_description</span>(self, request: MatchRequest) -> <span class="keyword">str</span>:
+        parts = [
+            <span class="string">f"Partido de pádel categorías {', '.join(request.categories)}"</span>,
+            <span class="string">f"ELO entre {request.elo_range[0]} y {request.elo_range[1]}"</span>,
+            <span class="string">f"Zona {request.location['zone']}"</span>,
+            <span class="string">f"Horario {request.match_time}"</span>,
+            <span class="string">f"Duración {request.required_time} minutos"</span>
+        ]
+        
+        <span class="keyword">if</span> request.preferred_position:
+            parts.append(<span class="string">f"Se busca jugador de {request.preferred_position}"</span>)
+        
+        <span class="keyword">return</span> <span class="string">". "</span>.join(parts)
+                </div>
+
+                <div class="warning-box">
+                    <strong>⚠️ Manejo de Errores:</strong>
+                    <ul>
+                        <li>Rate limiting (429): Implementar exponential backoff</li>
+                        <li>Timeouts: Configurar timeout de 30s</li>
+                        <li>API errors: Lanzar excepciones custom (EmbeddingError)</li>
+                        <li>Validar que el embedding tenga 1536 dimensiones</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pinecone -->
+            <div id="pinecone" class="section bg-sky">
+                <h2 class="section-title">🌲 Pinecone - Vector Database</h2>
+                
+                <div class="info-box">
+                    <strong>🗄️ Índice:</strong> matchmaking-players<br>
+                    <strong>📏 Dimensiones:</strong> 1536<br>
+                    <strong>📊 Métrica:</strong> cosine<br>
+                    <strong>☁️ Cloud:</strong> AWS us-east-1 (Serverless)
+                </div>
+
+                <h3 class="section-subtitle">Configuración del Índice</h3>
+                <div class="code-block">
+<span class="comment"># Setup inicial (ejecutar una vez)</span>
+<span class="keyword">from</span> pinecone <span class="keyword">import</span> Pinecone, ServerlessSpec
+
+pc = Pinecone(api_key=PINECONE_API_KEY)
+
+<span class="comment"># Crear índice</span>
+pc.create_index(
+    name=<span class="string">"matchmaking-players"</span>,
+    dimension=<span class="number">1536</span>,
+    metric=<span class="string">"cosine"</span>,
+    spec=ServerlessSpec(
+        cloud=<span class="string">"aws"</span>,
+        region=<span class="string">"us-east-1"</span>
+    )
+)
+                </div>
+
+                <h3 class="section-subtitle">Implementación del VectorStore</h3>
+                <div class="code-block">
+<span class="comment"># src/external/pinecone_client.py</span>
+<span class="keyword">from</span> pinecone <span class="keyword">import</span> Pinecone
+<span class="keyword">from</span> typing <span class="keyword">import</span> List, Dict, Optional
+
+<span class="keyword">class</span> <span class="function">VectorStore</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, api_key: <span class="keyword">str</span>, index_name: <span class="keyword">str</span>):
+        self.pc = Pinecone(api_key=api_key)
+        self.index = self.pc.Index(index_name)
+    
+    <span class="keyword">def</span> <span class="function">upsert_player</span>(
+        self, 
+        player_id: <span class="keyword">str</span>, 
+        embedding: List[<span class="keyword">float</span>], 
+        metadata: Dict
+    ):
+        <span class="string">"""Guardar o actualizar jugador en Pinecone"""</span>
+        <span class="keyword">try</span>:
+            self.index.upsert(vectors=[{
+                <span class="string">"id"</span>: player_id,
+                <span class="string">"values"</span>: embedding,
+                <span class="string">"metadata"</span>: metadata
+            }])
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            <span class="keyword">raise</span> VectorSearchError(<span class="string">f"Error upserting player: {str(e)}"</span>)
+    
+    <span class="keyword">def</span> <span class="function">search_similar</span>(
+        self,
+        query_embedding: List[<span class="keyword">float</span>],
+        filters: Optional[Dict] = <span class="keyword">None</span>,
+        top_k: <span class="keyword">int</span> = <span class="number">50</span>
+    ) -> List[Dict]:
+        <span class="string">"""Buscar jugadores similares con filtros opcionales"""</span>
+        <span class="keyword">try</span>:
+            results = self.index.query(
+                vector=query_embedding,
+                filter=filters,
+                top_k=top_k,
+                include_metadata=<span class="keyword">True</span>
+            )
+            
+            <span class="keyword">return</span> [{
+                <span class="string">"id"</span>: match[<span class="string">"id"</span>],
+                <span class="string">"score"</span>: match[<span class="string">"score"</span>],  <span class="comment"># Similitud coseno 0-1</span>
+                <span class="string">"metadata"</span>: match[<span class="string">"metadata"</span>]
+            } <span class="keyword">for</span> match <span class="keyword">in</span> results[<span class="string">"matches"</span>]]
+        
+        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+            <span class="keyword">raise</span> VectorSearchError(<span class="string">f"Error searching: {str(e)}"</span>)
+    
+    <span class="keyword">def</span> <span class="function">delete_player</span>(self, player_id: <span class="keyword">str</span>):
+        <span class="string">"""Eliminar jugador del índice"""</span>
+        self.index.delete(ids=[player_id])
+                </div>
+
+                <h3 class="section-subtitle">Estructura de Metadata</h3>
+                <div class="api-card">
+                    <h4>Metadata a Guardar por Jugador</h4>
+                    <div class="code-block">
+metadata = {
+    <span class="string">"name"</span>: <span class="string">"Juan Pérez"</span>,
+    <span class="string">"elo"</span>: <span class="number">1520</span>,
+    <span class="string">"category"</span>: <span class="string">"SEVENTH"</span>,
+    <span class="string">"gender"</span>: <span class="string">"MALE"</span>,
+    <span class="string">"age"</span>: <span class="number">28</span>,
+    <span class="string">"zone"</span>: <span class="string">"Nueva Córdoba"</span>,
+    <span class="string">"positions"</span>: [<span class="string">"FOREHAND"</span>, <span class="string">"BACKHAND"</span>]
+}
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">Filtros de Búsqueda</h3>
+                <div class="code-block">
+<span class="comment"># Ejemplo: Buscar jugadores MALE, categorías SIXTH o SEVENTH</span>
+filters = {
+    <span class="string">"$and"</span>: [
+        {<span class="string">"gender"</span>: <span class="string">"MALE"</span>},
+        {<span class="string">"category"</span>: {<span class="string">"$in"</span>: [<span class="string">"SIXTH"</span>, <span class="string">"SEVENTH"</span>]}}
+    ]
+}
+
+<span class="comment"># Nota: ELO range se filtra después de la búsqueda</span>
+<span class="comment"># porque Pinecone no optimiza filtros numéricos de rango</span>
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ Optimizaciones:</strong>
+                    <ul>
+                        <li>Usar filtros metadata para reducir resultados</li>
+                        <li>top_k = 50 es suficiente (filtrado posterior reduce a 20)</li>
+                        <li>Batch upserts (hasta 100 vectores a la vez)</li>
+                        <li>Cache de embeddings en producción</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PostgreSQL -->
+            <div id="postgresql" class="section bg-lemon">
+                <h2 class="section-title">💾 PostgreSQL - Métricas de Jugadores</h2>
+                
+                <div class="info-box">
+                    <strong>🎯 Propósito:</strong> Almacenar métricas comportamentales que cambian frecuentemente<br>
+                    <strong>📊 Datos principales:</strong> acceptance_rate, last_active_days<br>
+                    <strong>🔄 Actualización:</strong> Real-time cuando un jugador acepta/rechaza invitación
+                </div>
+
+                <h3 class="section-subtitle">Schema de la Tabla</h3>
+                <div class="code-block">
+<span class="comment">-- init.sql</span>
+<span class="keyword">CREATE TABLE</span> players (
+    id VARCHAR(<span class="number">36</span>) <span class="keyword">PRIMARY KEY</span>,
+    name VARCHAR(<span class="number">255</span>) <span class="keyword">NOT NULL</span>,
+    elo INTEGER <span class="keyword">NOT NULL</span>,
+    age INTEGER <span class="keyword">NOT NULL</span>,
+    gender VARCHAR(<span class="number">10</span>) <span class="keyword">NOT NULL</span>,
+    category VARCHAR(<span class="number">20</span>) <span class="keyword">NOT NULL</span>,
+    positions JSONB <span class="keyword">NOT NULL</span>,
+    location JSONB <span class="keyword">NOT NULL</span>,
+    availability JSONB,
+    acceptance_rate FLOAT <span class="keyword">DEFAULT</span> <span class="number">0.5</span>,
+    last_active_days INTEGER <span class="keyword">DEFAULT</span> <span class="number">999</span>,
+    created_at TIMESTAMP <span class="keyword">DEFAULT</span> CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP <span class="keyword">DEFAULT</span> CURRENT_TIMESTAMP
+);
+
+<span class="keyword">CREATE INDEX</span> idx_acceptance_rate <span class="keyword">ON</span> players(acceptance_rate);
+<span class="keyword">CREATE INDEX</span> idx_last_active <span class="keyword">ON</span> players(last_active_days);
+                </div>
+
+                <h3 class="section-subtitle">Implementación del DatabaseClient</h3>
+                <div class="code-block">
+<span class="comment"># src/database/db_client.py</span>
+<span class="keyword">import</span> psycopg2
+<span class="keyword">from</span> typing <span class="keyword">import</span> Dict, List, Optional
+<span class="keyword">from</span> psycopg2.pool <span class="keyword">import</span> SimpleConnectionPool
+
+<span class="keyword">class</span> <span class="function">DatabaseClient</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, connection_string: <span class="keyword">str</span>):
+        self.pool = SimpleConnectionPool(
+            minconn=<span class="number">1</span>,
+            maxconn=<span class="number">10</span>,
+            dsn=connection_string
+        )
+    
+    <span class="keyword">def</span> <span class="function">get_player_metrics</span>(self, player_id: <span class="keyword">str</span>) -> Dict:
+        <span class="string">"""Obtener métricas comportamentales del jugador"""</span>
+        conn = self.pool.getconn()
+        <span class="keyword">try</span>:
+            cursor = conn.cursor()
+            cursor.execute(<span class="string">"""
+                SELECT acceptance_rate, last_active_days
+                FROM players
+                WHERE id = %s
+            """</span>, (player_id,))
+            
+            result = cursor.fetchone()
+            
+            <span class="keyword">if</span> result:
+                <span class="keyword">return</span> {
+                    <span class="string">"acceptance_rate"</span>: result[<span class="number">0</span>],
+                    <span class="string">"last_active_days"</span>: result[<span class="number">1</span>]
+                }
+            <span class="keyword">else</span>:
+                <span class="comment"># Valores por defecto si no existe</span>
+                <span class="keyword">return</span> {
+                    <span class="string">"acceptance_rate"</span>: <span class="number">0.5</span>,
+                    <span class="string">"last_active_days"</span>: <span class="number">999</span>
+                }
+        
+        <span class="keyword">finally</span>:
+            self.pool.putconn(conn)
+    
+    <span class="keyword">def</span> <span class="function">get_all_players</span>(self) -> List[Dict]:
+        <span class="string">"""Obtener todos los jugadores (para indexación)"""</span>
+        conn = self.pool.getconn()
+        <span class="keyword">try</span>:
+            cursor = conn.cursor()
+            cursor.execute(<span class="string">"SELECT * FROM players"</span>)
+            
+            columns = [desc[<span class="number">0</span>] <span class="keyword">for</span> desc <span class="keyword">in</span> cursor.description]
+            results = cursor.fetchall()
+            
+            <span class="keyword">return</span> [<span class="keyword">dict</span>(zip(columns, row)) <span class="keyword">for</span> row <span class="keyword">in</span> results]
+        
+        <span class="keyword">finally</span>:
+            self.pool.putconn(conn)
+                </div>
+
+                <div class="warning-box">
+                    <strong>⚠️ Importante:</strong> En el hackathon usarás un PostgreSQL local en Docker. En producción, esto se conectaría directamente a la DB de PADER.
+                </div>
+            </div>
+
+            <!-- Flujo Completo -->
+            <div id="flujo-completo" class="section bg-rose">
+                <h2 class="section-title">🔄 Flujo Completo de Datos</h2>
+                
+                <div class="success-box">
+                    <strong>⚡ Objetivo:</strong> Responder en <200ms desde que llega el request hasta retornar los candidatos
+                </div>
+
+                <h3 class="section-subtitle">Pipeline Completo (8 Pasos)</h3>
+                <div class="flow-container">
+                    <div class="flow-step">
+                        <div class="flow-number">1</div>
+                        <div>
+                            <strong>Request HTTP llega a FastAPI</strong>
+                            <br>POST /api/matchmaking/find_candidates
+                            <br><code>MatchRequest</code> validado por Pydantic
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">2</div>
+                        <div>
+                            <strong>EmbeddingService.create_request_embedding()</strong>
+                            <br>OpenAI genera vector 1536D del request
+                            <br>⏱️ ~80ms
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">3</div>
+                        <div>
+                            <strong>VectorStore.search_similar()</strong>
+                            <br>Pinecone busca top 50 jugadores similares
+                            <br>Usa filtros: category, gender
+                            <br>⏱️ ~50ms
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">4</div>
+                        <div>
+                            <strong>Filtrado Adicional (Business Logic)</strong>
+                            <br>Verificar ELO range, edad, etc.
+                            <br>Reduce a ~30 candidatos
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">5</div>
+                        <div>
+                            <strong>DatabaseClient.get_player_metrics() (batch)</strong>
+                            <br>PostgreSQL retorna acceptance_rate y last_active_days
+                            <br>⏱️ ~30ms
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">6</div>
+                        <div>
+                            <strong>ScoringService.calculate_match_score()</strong>
+                            <br>Calcular score multi-dimensional (6 factores)
+                            <br>Generar "reasons" para cada candidato
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">7</div>
+                        <div>
+                            <strong>Ordenar y Seleccionar Top 20</strong>
+                            <br>Por score + acceptance_rate
+                            <br>Generar mensajes personalizados
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">8</div>
+                        <div>
+                            <strong>Retornar Response JSON</strong>
+                            <br>List[Candidate] con toda la info
+                            <br>PADER enviará invitaciones automáticamente
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">Diagrama de Secuencia</h3>
+                <div class="arch-diagram">
+                    <div style="text-align: left; max-width: 800px; margin: 0 auto;">
+                        <p><strong>Router</strong> → <strong>MatchmakingService</strong></p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>MatchmakingService</strong> → <strong>EmbeddingService</strong>: create_request_embedding()</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>EmbeddingService</strong> → <strong>OpenAI API</strong>: POST /embeddings</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>OpenAI API</strong> → <strong>EmbeddingService</strong>: List[float, 1536]</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>MatchmakingService</strong> → <strong>VectorStore</strong>: search_similar()</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>VectorStore</strong> → <strong>Pinecone</strong>: query()</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>Pinecone</strong> → <strong>VectorStore</strong>: List[Match]</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>MatchmakingService</strong> → <strong>DatabaseClient</strong>: get_player_metrics()</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>DatabaseClient</strong> → <strong>PostgreSQL</strong>: SELECT</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>MatchmakingService</strong> → <strong>ScoringService</strong>: calculate_score()</p>
+                        <p style="margin-left: 40px;">↓</p>
+                        <p><strong>MatchmakingService</strong> → <strong>Router</strong>: List[Candidate]</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración -->
+            <div id="config" class="section bg-aqua">
+                <h2 class="section-title">⚙️ Configuración y Variables</h2>
+                
+                <h3 class="section-subtitle">Variables de Entorno (.env)</h3>
+                <div class="code-block">
+<span class="comment"># OpenAI</span>
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<span class="comment"># Pinecone</span>
+PINECONE_API_KEY=pcsk_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+PINECONE_INDEX_NAME=matchmaking-players
+PINECONE_ENVIRONMENT=us-east-1
+
+<span class="comment"># PostgreSQL (Docker local)</span>
+DATABASE_URL=postgresql://pader:pader123@localhost:5432/pader_mock
+
+<span class="comment"># App Config</span>
+LOG_LEVEL=INFO
+MAX_CANDIDATES=50
+CACHE_TTL=3600
+                </div>
+
+                <h3 class="section-subtitle">Config Manager</h3>
+                <div class="code-block">
+<span class="comment"># src/config.py</span>
+<span class="keyword">from</span> pydantic_settings <span class="keyword">import</span> BaseSettings
+<span class="keyword">from</span> functools <span class="keyword">import</span> lru_cache
+
+<span class="keyword">class</span> <span class="function">Settings</span>(BaseSettings):
+    <span class="comment"># OpenAI</span>
+    openai_api_key: <span class="keyword">str</span>
+    
+    <span class="comment"># Pinecone</span>
+    pinecone_api_key: <span class="keyword">str</span>
+    pinecone_index_name: <span class="keyword">str</span>
+    pinecone_environment: <span class="keyword">str</span> = <span class="string">"us-east-1"</span>
+    
+    <span class="comment"># Database</span>
+    database_url: <span class="keyword">str</span>
+    
+    <span class="comment"># App</span>
+    log_level: <span class="keyword">str</span> = <span class="string">"INFO"</span>
+    max_candidates: <span class="keyword">int</span> = <span class="number">50</span>
+    
+    <span class="keyword">class</span> <span class="function">Config</span>:
+        env_file = <span class="string">".env"</span>
+
+<span class="comment"># Singleton</span>
+@lru_cache()
+<span class="keyword">def</span> <span class="function">get_settings</span>() -> Settings:
+    <span class="keyword">return</span> Settings()
+                </div>
+
+                <h3 class="section-subtitle">Dependency Injection (FastAPI)</h3>
+                <div class="code-block">
+<span class="comment"># src/external/dependencies.py</span>
+<span class="keyword">from</span> functools <span class="keyword">import</span> lru_cache
+<span class="keyword">from</span> config <span class="keyword">import</span> get_settings
+<span class="keyword">from</span> external.openai_client <span class="keyword">import</span> EmbeddingService
+<span class="keyword">from</span> external.pinecone_client <span class="keyword">import</span> VectorStore
+<span class="keyword">from</span> database.db_client <span class="keyword">import</span> DatabaseClient
+
+@lru_cache()
+<span class="keyword">def</span> <span class="function">get_embedding_service</span>() -> EmbeddingService:
+    settings = get_settings()
+    <span class="keyword">return</span> EmbeddingService(api_key=settings.openai_api_key)
+
+@lru_cache()
+<span class="keyword">def</span> <span class="function">get_vector_store</span>() -> VectorStore:
+    settings = get_settings()
+    <span class="keyword">return</span> VectorStore(
+        api_key=settings.pinecone_api_key,
+        index_name=settings.pinecone_index_name
+    )
+
+@lru_cache()
+<span class="keyword">def</span> <span class="function">get_database_client</span>() -> DatabaseClient:
+    settings = get_settings()
+    <span class="keyword">return</span> DatabaseClient(connection_string=settings.database_url)
+                </div>
+            </div>
+
+            <!-- APIs -->
+            <div id="apis" class="section bg-mint">
+                <h2 class="section-title">📡 Especificación de APIs</h2>
+                
+                <h3 class="section-subtitle">OpenAI Embeddings API</h3>
+                <div class="api-card">
+                    <h4><span class="api-method method-post">POST</span> https://api.openai.com/v1/embeddings</h4>
+                    <p><strong>Headers:</strong></p>
+                    <div class="code-block">
+Authorization: Bearer sk-proj-...
+Content-Type: application/json
+                    </div>
+                    <p><strong>Request Body:</strong></p>
+                    <div class="code-block">
+{
+    <span class="string">"model"</span>: <span class="string">"text-embedding-3-small"</span>,
+    <span class="string">"input"</span>: <span class="string">"Jugador de pádel categoría SEVENTH, ELO 1520..."</span>,
+    <span class="string">"encoding_format"</span>: <span class="string">"float"</span>
+}
+                    </div>
+                    <p><strong>Response:</strong></p>
+                    <div class="code-block">
+{
+    <span class="string">"object"</span>: <span class="string">"list"</span>,
+    <span class="string">"data"</span>: [{
+        <span class="string">"object"</span>: <span class="string">"embedding"</span>,
+        <span class="string">"embedding"</span>: [<span class="number">0.0023, -0.0012, ...</span>], <span class="comment">// 1536 floats</span>
+        <span class="string">"index"</span>: <span class="number">0</span>
+    }],
+    <span class="string">"model"</span>: <span class="string">"text-embedding-3-small"</span>,
+    <span class="string">"usage"</span>: {
+        <span class="string">"prompt_tokens"</span>: <span class="number">25</span>,
+        <span class="string">"total_tokens"</span>: <span class="number">25</span>
+    }
+}
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">Pinecone Query API</h3>
+                <div class="api-card">
+                    <h4>index.query() - Python SDK</h4>
+                    <p><strong>Método:</strong></p>
+                    <div class="code-block">
+results = index.query(
+    vector=[<span class="number">0.0023, -0.0012, ...</span>],  <span class="comment"># 1536 floats</span>
+    filter={
+        <span class="string">"gender"</span>: <span class="string">"MALE"</span>,
+        <span class="string">"category"</span>: {<span class="string">"$in"</span>: [<span class="string">"SIXTH"</span>, <span class="string">"SEVENTH"</span>]}
+    },
+    top_k=<span class="number">50</span>,
+    include_metadata=<span class="keyword">True</span>
+)
+                    </div>
+                    <p><strong>Response:</strong></p>
+                    <div class="code-block">
+{
+    <span class="string">"matches"</span>: [
+        {
+            <span class="string">"id"</span>: <span class="string">"player_uuid"</span>,
+            <span class="string">"score"</span>: <span class="number">0.89</span>,  <span class="comment">// Cosine similarity 0-1</span>
+            <span class="string">"metadata"</span>: {
+                <span class="string">"name"</span>: <span class="string">"Juan Pérez"</span>,
+                <span class="string">"elo"</span>: <span class="number">1520</span>,
+                <span class="string">"category"</span>: <span class="string">"SEVENTH"</span>,
+                <span class="string">"gender"</span>: <span class="string">"MALE"</span>
+            }
+        }
+    ]
+}
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <strong>🔒 Seguridad:</strong>
+                    <ul>
+                        <li>API keys en variables de entorno (nunca en código)</li>
+                        <li>Usar HTTPS para todas las conexiones</li>
+                        <li>Validar inputs con Pydantic</li>
+                        <li>Rate limiting en producción</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Resumen -->
+            <div class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2 class="section-title" style="color: white;">🎯 Resumen: Tu Checklist</h2>
+                
+                <div class="grid-2">
+                    <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px;">
+                        <h3 style="color: white; margin-bottom: 15px;">📁 Archivos a Crear</h3>
+                        <ul style="color: white;">
+                            <li>✅ src/external/openai_client.py</li>
+                            <li>✅ src/external/pinecone_client.py</li>
+                            <li>✅ src/database/db_client.py</li>
+                            <li>✅ src/external/dependencies.py</li>
+                            <li>✅ src/config.py</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px;">
+                        <h3 style="color: white; margin-bottom: 15px;">🔑 APIs a Configurar</h3>
+                        <ul style="color: white;">
+                            <li>✅ OpenAI API Key</li>
+                            <li>✅ Pinecone API Key + Index</li>
+                            <li>✅ PostgreSQL Connection</li>
+                            <li>✅ Environment Variables</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding: 25px; background: rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h3 style="color: white; margin-bottom: 15px;">⚡ Performance Targets</h3>
+                    <ul style="color: white; columns: 2; column-gap: 30px;">
+                        <li>OpenAI embedding: <100ms</li>
+                        <li>Pinecone search: <50ms</li>
+                        <li>PostgreSQL query: <30ms</li>
+                        <li>Total pipeline: <200ms</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <h3 style="color: white;">🚀 ¡Listo para construir la infraestructura!</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">
+                        Esta capa External es el corazón del matchmaking con IA.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Animaciones
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        entry.target.style.transition = 'all 0.6s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+                }
+            });
+        });
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
