@@ -7,6 +7,9 @@ __pycache__/
 .venv/
 env/
 ENV/
+venv
+INICIO_RAPIDO.md
+setup*
 
 # Environment
 .env
