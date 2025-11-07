@@ -125,16 +125,16 @@ volumes:
 
 ### 3. `requirements.txt`
 ```txt
-fastapi[standard]==0.115.0
-openai==1.54.0
-pinecone-client==5.0.0
-numpy==2.1.0
-pandas==2.2.0
-faker==30.8.0
+fastapi[standard]==0.121.0
+openai==2.7.1
+pinecone==7.3.0
+numpy==2.2.3
+pandas==2.2.3
+faker==34.0.0
 python-dotenv==1.0.1
-uvicorn[standard]==0.32.0
-pydantic==2.9.0
-psycopg2-binary==2.9.9
+uvicorn[standard]==0.34.0
+pydantic==2.10.6
+psycopg2-binary==2.9.10
 ```
 
 ### 4. `.env.example`
