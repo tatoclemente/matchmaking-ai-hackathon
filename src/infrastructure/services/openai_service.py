@@ -188,3 +188,7 @@ class OpenAIService:
 
 # Singleton instance for the service
 openai_service = OpenAIService()
+
+def get_openai_service() -> OpenAIService:
+    """Accessor para inyectar en routers sin crear múltiples instancias."""
+    return openai_service
