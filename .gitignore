@@ -13,6 +13,7 @@ ENV/
 
 # IDE
 .vscode/
+.amazonq/
 .idea/
 *.swp
 *.swo

@@ -1,7 +1,9 @@
 import uuid
 import random
 import numpy as np
+import json
 import psycopg2
+import psycopg2.extras
 from faker import Faker
 from typing import List, Dict, Any
 from src.config import config
@@ -10,7 +12,17 @@ from src.external.pinecone_client import pinecone_client
 
 fake = Faker('es_AR')
 
-CATEGORIES = ["NINTH", "EIGHTH", "SEVENTH", "SIXTH", "FIFTH", "FOURTH", "THIRD", "SECOND", "FIRST"]
+CATEGORIES = [
+    {"name": "NINTH", "min_elo": 0, "max_elo": 1199, "weight": 0.05},
+    {"name": "EIGHTH", "min_elo": 1200, "max_elo": 1499, "weight": 0.08},
+    {"name": "SEVENTH", "min_elo": 1500, "max_elo": 1799, "weight": 0.12},
+    {"name": "SIXTH", "min_elo": 1800, "max_elo": 2099, "weight": 0.20},
+    {"name": "FIFTH", "min_elo": 2100, "max_elo": 2399, "weight": 0.25},
+    {"name": "FOURTH", "min_elo": 2400, "max_elo": 2699, "weight": 0.15},
+    {"name": "THIRD", "min_elo": 2700, "max_elo": 2999, "weight": 0.10},
+    {"name": "SECOND", "min_elo": 3000, "max_elo": 3299, "weight": 0.03},
+    {"name": "FIRST", "min_elo": 3300, "max_elo": 3800, "weight": 0.02},
+]
 POSITIONS = ["FOREHAND", "BACKHAND"]
 GENDERS = ["MALE", "FEMALE"]
 ZONES = ["Nueva Córdoba", "Centro", "Cerro de las Rosas", "Güemes", "Alta Córdoba", "Alberdi", "General Paz"]
@@ -31,8 +43,14 @@ def generate_time_slots() -> List[Dict[str, str]]:
     return slots
 
 def generate_player() -> Dict[str, Any]:
-    elo = int(np.random.normal(1500, 300))
-    elo = max(800, min(3300, elo))
+    # Seleccionar categoría con distribución ponderada
+    category = random.choices(CATEGORIES, weights=[c["weight"] for c in CATEGORIES])[0]
+    
+    # Generar ELO dentro del rango de la categoría
+    elo_range = category["max_elo"] - category["min_elo"]
+    elo_center = category["min_elo"] + elo_range / 2
+    elo = int(np.random.normal(elo_center, elo_range / 4))
+    elo = max(category["min_elo"], min(category["max_elo"], elo))
     
     return {
         'id': str(uuid.uuid4()),
@@ -40,7 +58,7 @@ def generate_player() -> Dict[str, Any]:
         'elo': elo,
         'age': random.randint(18, 60),
         'gender': random.choice(GENDERS),
-        'category': random.choices(CATEGORIES, weights=[0.05, 0.08, 0.12, 0.20, 0.25, 0.15, 0.10, 0.03, 0.02])[0],
+        'category': category["name"],
         'positions': random.sample(POSITIONS, k=random.randint(1, 2)),
         'location': {
             'lat': -31.4201 + random.uniform(-0.05, 0.05),
@@ -76,7 +94,28 @@ def build_player_description(player: Dict[str, Any]) -> str:
     
     return ". ".join(parts)
 
-def seed_players(num_players: int = 1000, batch_size: int = 100):
+def clean_data():
+    """Limpiar datos existentes de PostgreSQL y Pinecone"""
+    print("Limpiando datos existentes...")
+    
+    # Limpiar PostgreSQL
+    conn = psycopg2.connect(config.DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players")
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print("✓ PostgreSQL limpiado")
+    
+    # Limpiar Pinecone
+    pinecone_client.initialize_index()
+    pinecone_client.index.delete(delete_all=True)
+    print("✓ Pinecone limpiado")
+
+def seed_players(num_players: int = 1000, batch_size: int = 100, clean: bool = True):
+    if clean:
+        clean_data()
+    
     print(f"Generando {num_players} jugadores...")
     
     conn = psycopg2.connect(config.DATABASE_URL)
@@ -142,5 +181,9 @@ def seed_players(num_players: int = 1000, batch_size: int = 100):
     print(f"✓ {num_players} jugadores creados exitosamente")
 
 if __name__ == "__main__":
+    import sys
     config.validate()
-    seed_players(1000)
+    
+    # Opciones: python -m src.seeders.seed_players [--no-clean]
+    clean = "--no-clean" not in sys.argv
+    seed_players(1000, clean=clean)
